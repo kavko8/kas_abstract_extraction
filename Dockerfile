@@ -10,7 +10,7 @@ RUN apt-get install ffmpeg libsm6 libxext6  -y
 RUN apt-get install poppler-utils -y
 RUN mkdir PDF
 
-WORKDIR ${PWD}
+WORKDIR .
 
 COPY ./abstract /
 

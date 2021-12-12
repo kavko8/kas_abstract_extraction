@@ -1,6 +1,12 @@
 This repository contains source code and install instructions for extracting abstracts from slovene academic .pdf texts (BSc MSc and PhD). This code extracts the abstarct in english and slovenian language.
 
-### Usage
+
+#### Prerequisites
+- Docker
+
+Please refere to https://docs.docker.com/get-docker/ for install instructions
+
+#### Usage
 
 - git clone https://github.com/kavko8/kas_abstract_extraction.git
 - cd kas_abstract_extraction

@@ -322,7 +322,7 @@ all_pdfs = []
 
 for path, subdirs, files in os.walk(base_name):
     for name in files:
-        if name.endswith(".pdf") and "kas-" in name:
+        if name.endswith(".pdf"):
             all_pdfs.append([name, os.path.join(path, name)])
 
 all_pdfs = natsorted(all_pdfs, reverse=True)
@@ -366,4 +366,4 @@ for file in files:
 
 figs = pd.read_json("figures.jsonl")
 figs.to_csv("./figures/figures.csv", sep="|")
-os.remove("./figures.jsonl")
+# os.remove("./figures.jsonl")
