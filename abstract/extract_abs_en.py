@@ -104,67 +104,64 @@ with sum_count as s_c:
 
         title = "UNKNOWNUNKNOWNUNKNOWN"
         a = ai(pdf_name)
-        if "kas-9403000" in name:
-            h = "j"
         if a is None:
-            if "kas" in name:
-                pdf = open(pdf_name).read()
-                pdf = pdf.split("\n")
-                pdf = [line for line in pdf if len(line)]
-                abs_index = -1
-                kw_index = -1
-                text = ""
+            pdf = open(pdf_name).read()
+            pdf = pdf.split("\n")
+            pdf = [line for line in pdf if len(line)]
+            abs_index = -1
+            kw_index = -1
+            text = ""
+            for ind, line in enumerate(pdf):
+                numbers = sum(c.isdigit() for c in line)
+                l = line.lower().replace(" ", "")
+                l = re.sub(f"\d", "", l)
+                l = re.sub('\x0c', "", l)
+
+                if similar(l, "abstract", 0.9) and ":" not in l and numbers < 2:
+                    abs_index = ind + 1
+                    break
+
+            if abs_index < 0:
                 for ind, line in enumerate(pdf):
-                    numbers = sum(c.isdigit() for c in line)
-                    l = line.lower().replace(" ", "")
+                    l = line.lower().replace(" ", "").replace("č", "c")
                     l = re.sub(f"\d", "", l)
                     l = re.sub('\x0c', "", l)
-
-                    if similar(l, "abstract", 0.9) and ":" not in l and numbers < 2:
+                    if similar(l, "summary", 0.9):
                         abs_index = ind + 1
                         break
 
-                if abs_index < 0:
-                    for ind, line in enumerate(pdf):
-                        l = line.lower().replace(" ", "").replace("č", "c")
-                        l = re.sub(f"\d", "", l)
-                        l = re.sub('\x0c', "", l)
-                        if similar(l, "summary", 0.9):
-                            abs_index = ind + 1
+            if abs_index > 0:
+                pdf = pdf[abs_index:]
+                text = ""
+                ends = [".", "!", "?", "…", ":", ";", ",", "-"]
+
+                for j, line in enumerate(pdf):
+                    if len(line) > 1:
+                        stoph = line.lower().replace(" ", "").replace(".", "")
+                        stoph = re.sub("\d", "", stoph)
+                        stoph = re.sub('\x0c', "", stoph)
+                        kb = stoph[0:14]
+                        kw = stoph[0:9]
+                        ab = stoph[0:9]
+                        the_kw = stoph[0:12]
+                        if similar("keywords", kw, 0.8) or similar("ključnebesede", kb, 0.8) or similar("povzetek", ab, 0.8) or similar("thekeywords:", the_kw, 0.95) and j > 1:
+                            break
+                        if len(line.split()) < 6 and line[-1] not in ends and not line.replace(" ", "").startswith("-") and sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")) and j > 1:
                             break
 
-                if abs_index > 0:
-                    pdf = pdf[abs_index:]
-                    text = ""
-                    ends = [".", "!", "?", "…", ":", ";", ",", "-"]
-
-                    for j, line in enumerate(pdf):
-                        if len(line) > 1:
-                            stoph = line.lower().replace(" ", "").replace(".", "")
-                            stoph = re.sub("\d", "", stoph)
-                            stoph = re.sub('\x0c', "", stoph)
-                            kb = stoph[0:14]
-                            kw = stoph[0:9]
-                            ab = stoph[0:9]
-                            the_kw = stoph[0:12]
-                            if similar("keywords", kw, 0.8) or similar("ključnebesede", kb, 0.8) or similar("povzetek", ab, 0.8) or similar("thekeywords:", the_kw, 0.95) and j > 1:
-                                break
-                            if len(line.split()) < 6 and line[-1] not in ends and not line.replace(" ", "").startswith("-") and sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")) and j > 1:
-                                break
-
-                            if title.lower() not in line.lower() and "UDC" not in line:
-                                temp_l = line.split()
-                                temp_l = [l for l in temp_l if sum(
-                                    c.isdigit() for c in l) == 0]
-                                temp_l = "".join(temp_l)
-                                if temp_l.replace(" ", "").isupper() and not line[-1] in ends:
-                                    pass
-                                else:
-                                    if sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")):
-                                        if not line.lower().startswith("title:") and not line.lower().replace(" ", "").startswith("subjecttags:"):
-                                            slash = line.count("/")
-                                            if slash < 4:
-                                                text = text + line + " "
+                        if title.lower() not in line.lower() and "UDC" not in line:
+                            temp_l = line.split()
+                            temp_l = [l for l in temp_l if sum(
+                                c.isdigit() for c in l) == 0]
+                            temp_l = "".join(temp_l)
+                            if temp_l.replace(" ", "").isupper() and not line[-1] in ends:
+                                pass
+                            else:
+                                if sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")):
+                                    if not line.lower().startswith("title:") and not line.lower().replace(" ", "").startswith("subjecttags:"):
+                                        slash = line.count("/")
+                                        if slash < 4:
+                                            text = text + line + " "
 
                 if len(text) > 200:
                     abs_text = remove_noise(text)
