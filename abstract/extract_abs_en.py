@@ -76,7 +76,7 @@ def ai(pdf_name):
 
 fold = "abs-en"
 base_name = "./figures_txt"
-os.makedirs(f"/PDF/{fold}", exist_ok=True)
+os.makedirs(f"./PDF/{fold}", exist_ok=True)
 
 
 def remove_noise(txt):
