@@ -21,68 +21,71 @@ class Figures:
         self.thread_count = thread_count
 
     def main(vals):
-        pdf_name = vals[0]
-        name = vals[1]
-        thread_count = vals[2]
-        figures = []
-        p_name = pdf_name.replace("My Passport", "My\ Passport")
-        num_pages = int(subprocess.check_output(
-            f"pdfinfo {p_name} | grep -a Pages | sed 's/[^0-9]*//'",
-            shell=True,
-            encoding="UTF-8"))
+        try:
+            pdf_name = vals[0]
+            name = vals[1]
+            thread_count = vals[2]
+            figures = []
+            p_name = pdf_name.replace("My Passport", "My\ Passport")
+            num_pages = int(subprocess.check_output(
+                f"pdfinfo {p_name} | grep -a Pages | sed 's/[^0-9]*//'",
+                shell=True,
+                encoding="UTF-8"))
 
-        if num_pages > 15:  # skip all the documents that have less than 15 pages
-            images = convert_from_path(
-                pdf_name, dpi=72, thread_count=thread_count)
-            imgs = [np.array(image) for image in images]
+            if num_pages > 15:  # skip all the documents that have less than 15 pages
+                images = convert_from_path(
+                    pdf_name, dpi=72, thread_count=thread_count)
+                imgs = [np.array(image) for image in images]
 
-            landscape_c = 0
-            for img in imgs:
-                if img.shape[1] > img.shape[0]:
-                    landscape_c += 1
+                landscape_c = 0
+                for img in imgs:
+                    if img.shape[1] > img.shape[0]:
+                        landscape_c += 1
 
-            masks = []
-            new_imgs = []
+                masks = []
+                new_imgs = []
 
-            for page_num, img in enumerate(imgs):
-                new_orig, mask = Figures.remove_images(img)
-                new_imgs.append(new_orig)
-                masks.append(mask)
+                for page_num, img in enumerate(imgs):
+                    new_orig, mask = Figures.remove_images(img)
+                    new_imgs.append(new_orig)
+                    masks.append(mask)
 
-            new_imgs, masks = Figures.remove_headers(
-                new_imgs, masks, num_pages)
-            new_imgs = [np.flipud(img) for img in new_imgs]
-            masks = [np.flipud(mask) for mask in masks]
-            new_imgs, masks = Figures.remove_headers(
-                new_imgs, masks, num_pages)  # same just for footers
-            new_imgs = [np.flipud(img) for img in new_imgs]
-            masks = [np.flipud(mask) for mask in masks]
-            for ind, mask in enumerate(masks):
-                contours = cv2.findContours(
-                    mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[0]
-                contours.sort(key=lambda c: cv2.boundingRect(c)[1])
-                coords = []
-                for cnt in contours:
-                    x, y, w, h = cv2.boundingRect(cnt)
-                    if h > 2:
-                        coords.append([y, h])
-                figures.append(coords)
-            d = {"id": f'{name.replace(".pdf", "")}',
-                 "figures": figures, "status": True, "error": ""}
-            with open(f'./figures/{name.replace(".pdf", ".txt")}', "w") as f:
-                # skip if half the pages are in landscape
-                if landscape_c > len(imgs) // 2:
-                    d = {"id": f'{name.replace(".pdf", "")}', "figures": figures, "status": True,
-                         "error": "This PDF had more than half pages in landscape."}
-                values = json.dumps(d)
-                f.write(values)
+                new_imgs, masks = Figures.remove_headers(
+                    new_imgs, masks, num_pages)
+                new_imgs = [np.flipud(img) for img in new_imgs]
+                masks = [np.flipud(mask) for mask in masks]
+                new_imgs, masks = Figures.remove_headers(
+                    new_imgs, masks, num_pages)  # same just for footers
+                new_imgs = [np.flipud(img) for img in new_imgs]
+                masks = [np.flipud(mask) for mask in masks]
+                for ind, mask in enumerate(masks):
+                    contours = cv2.findContours(
+                        mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[0]
+                    contours.sort(key=lambda c: cv2.boundingRect(c)[1])
+                    coords = []
+                    for cnt in contours:
+                        x, y, w, h = cv2.boundingRect(cnt)
+                        if h > 2:
+                            coords.append([y, h])
+                    figures.append(coords)
+                d = {"id": f'{name.replace(".pdf", "")}',
+                     "figures": figures, "status": True, "error": ""}
+                with open(f'./figures/{name.replace(".pdf", ".txt")}', "w") as f:
+                    # skip if half the pages are in landscape
+                    if landscape_c > len(imgs) // 2:
+                        d = {"id": f'{name.replace(".pdf", "")}', "figures": figures, "status": True,
+                             "error": "This PDF had more than half pages in landscape."}
+                    values = json.dumps(d)
+                    f.write(values)
 
-        else:
-            d = {"id": f'{name.replace(".pdf", "")}', "figures": figures,
-                 "status": False, "error": "This PDF had less than 15 pages."}
-            with open(f'./figures/{name.replace(".pdf", ".txt")}', "w") as f:
-                values = json.dumps(d)
-                f.write(values)
+            else:
+                d = {"id": f'{name.replace(".pdf", "")}', "figures": figures,
+                     "status": False, "error": "This PDF had less than 15 pages."}
+                with open(f'./figures/{name.replace(".pdf", ".txt")}', "w") as f:
+                    values = json.dumps(d)
+                    f.write(values)
+        except:
+            pass
 
     @staticmethod
     def remove_headers(new_imgs, masks, num_pages):

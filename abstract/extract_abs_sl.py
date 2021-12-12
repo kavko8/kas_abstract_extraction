@@ -149,76 +149,82 @@ with sum_count as s_c:
     for j, name in enumerate(natsorted(os.listdir(base_name))):
         pdf_name = os.path.join(base_name, name)
         title = "UNKNOWNUNKNOWNUNKNOWN"
-        a = ai(pdf_name)
+        try:
+            a = ai(pdf_name)
+        except:
+            a = None
         if a is None:
-            pdf = open(pdf_name).read()
-            pdf = pdf.split("\n")
-            pdf = [line for line in pdf if len(line)]
-            abs_index = -1
-            kw_index = -1
-            text = ""
-            for ind, line in enumerate(pdf):
-                numbers = sum(c.isdigit() for c in line)
-                l = line.lower().replace(" ", "")
-                l = re.sub(f"\d", "", l)
-                l = re.sub('\x0c', "", l)
-
-                if similar(l, "povzetek", 0.9) and ":" not in l and numbers < 2:
-                    abs_index = ind + 1
-
-            if abs_index < 0:
+            try:
+                pdf = open(pdf_name).read()
+                pdf = pdf.split("\n")
+                pdf = [line for line in pdf if len(line)]
+                abs_index = -1
+                kw_index = -1
+                text = ""
                 for ind, line in enumerate(pdf):
-                    l = line.lower().replace(" ", "").replace("č", "c")
+                    numbers = sum(c.isdigit() for c in line)
+                    l = line.lower().replace(" ", "")
                     l = re.sub(f"\d", "", l)
                     l = re.sub('\x0c', "", l)
-                    if similar(l, "izvlecek", 0.9) and "izvleckov" not in l:
+
+                    if similar(l, "povzetek", 0.9) and ":" not in l and numbers < 2:
                         abs_index = ind + 1
 
-            if abs_index > 0:
-                pdf = pdf[abs_index:]
-                text = ""
-                ends = [".", "!", "?", "…", ":", ";", ",", "-"]
+                if abs_index < 0:
+                    for ind, line in enumerate(pdf):
+                        l = line.lower().replace(" ", "").replace("č", "c")
+                        l = re.sub(f"\d", "", l)
+                        l = re.sub('\x0c', "", l)
+                        if similar(l, "izvlecek", 0.9) and "izvleckov" not in l:
+                            abs_index = ind + 1
 
-                for j, line in enumerate(pdf):
-                    if len(line) > 1:
-                        stoph = line.lower().replace(" ", "").replace(".", "")
-                        stoph = re.sub("\d", "", stoph)
-                        stoph = re.sub('\x0c', "", stoph)
-                        kb = stoph[0:14]
-                        kw = stoph[0:9]
-                        ab = stoph[0:9]
-                        suma = stoph[0:8]
-                        if j > 1:
-                            if similar("kljucnebesede", kb, 0.8):
-                                break
-                            if similar("keywords", kw, 0.8):
-                                break
-                            if similar("abstarct", ab, 0.8):
-                                break
-                            if similar("summary", suma, 0.8):
-                                break
-                            if len(line.split()) < 6 and line[-1] not in ends and not line.replace(" ", "").startswith("-") and sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")):
-                                break
+                if abs_index > 0:
+                    pdf = pdf[abs_index:]
+                    text = ""
+                    ends = [".", "!", "?", "…", ":", ";", ",", "-"]
 
-                        if title.lower() not in line.lower() and "UDK" not in line:
-                            temp_l = line.split()
-                            temp_l = [l for l in temp_l if sum(
-                                c.isdigit() for c in l) == 0]
-                            temp_l = "".join(temp_l)
-                            if temp_l.replace(" ", "").isupper() and not line[-1] in ends:
-                                pass
-                            else:
-                                if sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")):
-                                    if not line.lower().startswith("naslov:") and not line.lower().replace(" ", "").startswith("predmetneoznake:"):
-                                        slash = line.count("/")
-                                        if slash < 4:
-                                            text = text + line + " "
+                    for j, line in enumerate(pdf):
+                        if len(line) > 1:
+                            stoph = line.lower().replace(" ", "").replace(".", "")
+                            stoph = re.sub("\d", "", stoph)
+                            stoph = re.sub('\x0c', "", stoph)
+                            kb = stoph[0:14]
+                            kw = stoph[0:9]
+                            ab = stoph[0:9]
+                            suma = stoph[0:8]
+                            if j > 1:
+                                if similar("kljucnebesede", kb, 0.8):
+                                    break
+                                if similar("keywords", kw, 0.8):
+                                    break
+                                if similar("abstarct", ab, 0.8):
+                                    break
+                                if similar("summary", suma, 0.8):
+                                    break
+                                if len(line.split()) < 6 and line[-1] not in ends and not line.replace(" ", "").startswith("-") and sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")):
+                                    break
 
-                if len(text) > 200:
-                    abs_text = remove_noise(text)
-                    with open(f"/PDF/{fold}/{name.replace('.txt', '-abs-sl.txt')}", "w") as f:
-                        f.writelines(abs_text[:-1])
-                        f.close()
+                            if title.lower() not in line.lower() and "UDK" not in line:
+                                temp_l = line.split()
+                                temp_l = [l for l in temp_l if sum(
+                                    c.isdigit() for c in l) == 0]
+                                temp_l = "".join(temp_l)
+                                if temp_l.replace(" ", "").isupper() and not line[-1] in ends:
+                                    pass
+                                else:
+                                    if sum(c.isdigit() for c in line.replace(" ", "")) != len(line.replace(" ", "")):
+                                        if not line.lower().startswith("naslov:") and not line.lower().replace(" ", "").startswith("predmetneoznake:"):
+                                            slash = line.count("/")
+                                            if slash < 4:
+                                                text = text + line + " "
+
+                    if len(text) > 200:
+                        abs_text = remove_noise(text)
+                        with open(f"/PDF/{fold}/{name.replace('.txt', '-abs-sl.txt')}", "w") as f:
+                            f.writelines(abs_text[:-1])
+                            f.close()
+            except:
+                pass
         else:
             with open(f"/PDF/{fold}/{name.replace('.txt', '-abs-sl.txt')}", "w") as f:
                 f.writelines(a)

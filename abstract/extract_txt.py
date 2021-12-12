@@ -137,41 +137,44 @@ f = natsorted(f)
 
 
 def main(variables):
-    name = variables[0]
-    direct = variables[1]
-    figs = variables[2]
-    landscape = variables[3]
-    text = []
-    for num, page in enumerate(figs):
-        pg = []
-        for area in page:
-            y1 = area[0]
-            y2 = area[1]
-            if not landscape:
-                txt = subprocess.check_output(
-                    f'pdftotext -y {y1} -H {y2} -f {num + 1} -l {num + 1} -W 1000 -nopgbrk -layout -enc "UTF-8" -r 72 -q {direct}/{name} -',
-                    # -y {offset} -H {bottom} -r 72
-                    shell=True,
-                    encoding="UTF-8")
-            else:
-                txt = subprocess.check_output(
-                    f'pdftotext -y {y1} -H {y2} -f {num + 1} -l {num + 1} -W 1000 -nopgbrk -enc "UTF-8" -r 72 -q {direct}/{name} -',
-                    # -y {offset} -H {bottom} -r 72
-                    shell=True,
-                    encoding="UTF-8")
-            txt = txt.replace("\f", "")
-            txt = txt.replace("", "")
-            pg.append(txt)
-        pg = ("\n" + "\n").join(pg)
-        text.append(pg)
-        text.append("\f")
+    try:
+        name = variables[0]
+        direct = variables[1]
+        figs = variables[2]
+        landscape = variables[3]
+        text = []
+        for num, page in enumerate(figs):
+            pg = []
+            for area in page:
+                y1 = area[0]
+                y2 = area[1]
+                if not landscape:
+                    txt = subprocess.check_output(
+                        f'pdftotext -y {y1} -H {y2} -f {num + 1} -l {num + 1} -W 1000 -nopgbrk -layout -enc "UTF-8" -r 72 -q {direct}/{name} -',
+                        # -y {offset} -H {bottom} -r 72
+                        shell=True,
+                        encoding="UTF-8")
+                else:
+                    txt = subprocess.check_output(
+                        f'pdftotext -y {y1} -H {y2} -f {num + 1} -l {num + 1} -W 1000 -nopgbrk -enc "UTF-8" -r 72 -q {direct}/{name} -',
+                        # -y {offset} -H {bottom} -r 72
+                        shell=True,
+                        encoding="UTF-8")
+                txt = txt.replace("\f", "")
+                txt = txt.replace("", "")
+                pg.append(txt)
+            pg = ("\n" + "\n").join(pg)
+            text.append(pg)
+            text.append("\f")
 
-    text = "".join([i for i in text])
+        text = "".join([i for i in text])
 
-    with open(f"./figures_txt/{name.replace('.pdf', '.txt')}", "w", encoding="utf8", newline='\n') as f:
-        f.write(text)
-        f.flush()
-        f.close()
+        with open(f"./figures_txt/{name.replace('.pdf', '.txt')}", "w", encoding="utf8", newline='\n') as f:
+            f.write(text)
+            f.flush()
+            f.close()
+    except:
+        pass
 
 
 list1 = []
